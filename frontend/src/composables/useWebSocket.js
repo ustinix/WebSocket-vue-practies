@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { onUnmounted, reactive, ref } from "vue";
 
 const WS_URL = import.meta.env.VITE_WS_SERVER || 'ws://localhost:8080';
 const MAX_HISTORY = 60;
@@ -59,5 +59,24 @@ export function useWebSocket() {
                 reconnectTimeout = setTimeout(connect, 1000);
             }
         }
+    }
+
+    function disconnect() {
+        manualClose= true;
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+        ws.close();
+        ws = null;
+        status.value = 'disconnected';
+    }
+
+    // если компонент использующий композабл исчезнет (размонтируется) то нужно отключить соединение
+    onUnmounted(disconnect);
+    return {
+        connect,
+        disconnect,
+        status,
+        tickers,
+        priceHistory
     }
 }
